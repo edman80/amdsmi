@@ -103,7 +103,8 @@ macro_rules! call_amdsmi {
     ($fn_name:ident($($args:expr),+ $(,)?)) => {{
         let lib = crate::library::get_library()
             .map_err(|e| AmdsmiError::LibraryNotLoaded(e.clone()))?;
-        let status = unsafe { (lib.$fn_name)($($args),+) };
+        let func = lib.$fn_name.ok_or_else(|| AmdsmiError::Status(AmdsmiStatusT::AmdsmiStatusNotSupported))?;
+        let status = unsafe { func($($args),+) };
         if status != AmdsmiStatusT::AmdsmiStatusSuccess {
             return Err(AmdsmiError::Status(status));
         }
@@ -112,7 +113,8 @@ macro_rules! call_amdsmi {
     ($fn_name:ident()) => {{
         let lib = crate::library::get_library()
             .map_err(|e| AmdsmiError::LibraryNotLoaded(e.clone()))?;
-        let status = unsafe { (lib.$fn_name)() };
+        let func = lib.$fn_name.ok_or_else(|| AmdsmiError::Status(AmdsmiStatusT::AmdsmiStatusNotSupported))?;
+        let status = unsafe { func() };
         if status != AmdsmiStatusT::AmdsmiStatusSuccess {
             return Err(AmdsmiError::Status(status));
         }
